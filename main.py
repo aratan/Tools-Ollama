@@ -2,18 +2,15 @@ import subprocess
 import ollama
 import sys
 
-# Constantes de configuración
-MODEL_NAME = " qwen2.5-coder"  # Nombre del modelo
-SYSTEM_PROMPT = 'You are a windows shell expert assistant.'  # Descripción del rol del asistente
-NUM_CONTEXT = 32000  # Número de contexto para el modelo
+SHELLSP_MODEL = "qwen2.5-coder" 
+SHELLSP_SYSPROMPT = 'You are a windows shell expert assistant.'
+SHELLSP_NUM_CONTEXT = 32000
 
-# Opciones para el modelo
 model_options = {
     "temperature": 0,
-    "num_ctx": NUM_CONTEXT,
+    "num_ctx": SHELLSP_NUM_CONTEXT,
 }
 
-# Herramientas del modelo
 model_tools = [
     {
         "type": "function",
@@ -41,17 +38,14 @@ def bash(command):
         return str(e)
 
 def run(model, prompt):
-    # Obtiene información del sistema
     sys_info = subprocess.check_output("systeminfo", text=True, shell=True).replace("\t", " ").replace("\n", ". ")
-    sys_prompt = SYSTEM_PROMPT + " " + sys_info
+    sys_prompt = SHELLSP_SYSPROMPT + " " + sys_info
 
-    # Mensajes para el modelo
     messages = [
         {"role": "system", "content": sys_prompt},
         {"role": "user", "content": prompt},
     ]
 
-    # Consulta al modelo
     response = ollama.chat(
         model=model,
         messages=messages,
@@ -62,7 +56,6 @@ def run(model, prompt):
     if 'message' in response:
         print(response['message']['content'])
 
-        # Si hay llamadas a herramientas, se ejecutan
         if 'tool_calls' in response['message']:
             for tool in response['message']['tool_calls']:
                 if tool['function']['name'] == 'execute_cmd':
@@ -78,7 +71,7 @@ def main():
         return
 
     prompt = " ".join(sys.argv[1:])
-    run(MODEL_NAME, prompt)
+    run(SHELLSP_MODEL, prompt)
 
 if __name__ == "__main__":
     main()
